@@ -10,5 +10,7 @@ public class ApplicationDbContext : DbContext
     {
     }
 
+    public DbSet<User> Users { get; set; }
+    public DbSet<ReservableObject> ReservableObjects { get; set; }
     public DbSet<Reservation> Reservations { get; set; }
 }
