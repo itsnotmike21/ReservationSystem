@@ -1,56 +1,51 @@
-@model ReservationSystem.Models.Facility
+@model IEnumerable<ReservationSystem.Models.Facility>
 
 @{
-    ViewData["Title"] = "Edit";
+    ViewData["Title"] = "Obiekty";
 }
 
-<h1>Edit</h1>
+<h1 class="mb-4">Dostępne obiekty</h1>
 
-<h4>Facility</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="Id" />
-            <div class="form-group">
-                <label asp-for="Name" class="control-label"></label>
-                <input asp-for="Name" class="form-control" />
-                <span asp-validation-for="Name" class="text-danger"></span>
+<div class="row row-cols-1 row-cols-md-3 g-4">
+
+    @foreach (var item in Model)
+    {
+        <div class="col">
+            <div class="card h-100 shadow-sm">
+
+                @if (!string.IsNullOrEmpty(item.ImageUrl))
+                {
+                    <img src="@item.ImageUrl" class="card-img-top" style="height: 200px; object-fit: cover;" />
+                }
+                else
+                {
+                    <img src="/images/no-image.png" class="card-img-top" style="height: 200px; object-fit: cover;" />
+                }
+
+                <div class="card-body">
+                    <h5 class="card-title">@item.Name</h5>
+                    <p class="card-text">@item.Description</p>
+                    <p><strong>Cena:</strong> @item.Price zł / godz.</p>
+                    <p><strong>Rozmiar:</strong> @item.Size m²</p>
+                    <p><strong>Max osób:</strong> @item.Occupancy</p>
+                </div>
+
+                <div class="card-footer d-flex justify-content-between">
+                    <a asp-controller="Reservations" asp-action="Create" asp-route-facilityId="@item.Id" class="btn btn-primary">
+                        Zarezerwuj
+                    </a>
+
+                    @if (Context.Session.GetString("UserRole") == "Admin")
+                    {
+                        <div>
+                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning btn-sm">Edytuj</a>
+                            <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger btn-sm">Usuń</a>
+                        </div>
+                    }
+                </div>
+
             </div>
-            <div class="form-group">
-                <label asp-for="Description" class="control-label"></label>
-                <input asp-for="Description" class="form-control" />
-                <span asp-validation-for="Description" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Price" class="control-label"></label>
-                <input asp-for="Price" class="form-control" />
-                <span asp-validation-for="Price" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Size" class="control-label"></label>
-                <input asp-for="Size" class="form-control" />
-                <span asp-validation-for="Size" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Occupancy" class="control-label"></label>
-                <input asp-for="Occupancy" class="form-control" />
-                <span asp-validation-for="Occupancy" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="ImageUrl" class="control-label"></label>
-                <input asp-for="ImageUrl" class="form-control" />
-                <span asp-validation-for="ImageUrl" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
-            </div>
-        </form>
-    </div>
+        </div>
+    }
+
 </div>
-
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
-

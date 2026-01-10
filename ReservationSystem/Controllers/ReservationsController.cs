@@ -22,8 +22,19 @@ namespace ReservationSystem.Controllers
         // GET: Reservations
         public async Task<IActionResult> Index()
         {
-            var applicationDbContext = _context.Reservations.Include(r => r.User);
-            return View(await applicationDbContext.ToListAsync());
+            var role = HttpContext.Session.GetString("UserRole");
+            var userId = HttpContext.Session.GetInt32("UserId");
+
+            IQueryable<Reservation> reservations = _context.Reservations
+                .Include(r => r.Facility)
+                .Include(r => r.User); // admin zobaczy dane usera
+
+            if (role != "Admin")
+            {
+                reservations = reservations.Where(r => r.UserId == userId);
+            }
+
+            return View(await reservations.ToListAsync());
         }
 
         // GET: Reservations/Details/5
@@ -48,7 +59,7 @@ namespace ReservationSystem.Controllers
         // GET: Reservations/Create
         public IActionResult Create()
         {
-            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Id");
+            ViewData["FacilityId"] = new SelectList(_context.Facilities, "Id", "Name");
             return View();
         }
 
@@ -57,15 +68,35 @@ namespace ReservationSystem.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,UserId,ObjectId,StartTime,EndTime,Notes")] Reservation reservation)
+        public async Task<IActionResult> Create([Bind("Id,FacilityId,StartTime,EndTime,Notes")] Reservation reservation)
         {
+            reservation.UserId = HttpContext.Session.GetInt32("UserId").Value;
+
+            if (reservation.StartTime >= reservation.EndTime)
+            {
+                ModelState.AddModelError(string.Empty, "Czas rozpoczęcia musi być wcześniejszy niż czas zakończenia.");
+            }
+
+            // Sprawdzenie konfliktu rezerwacji dla tego samego obiektu
+            bool hasConflict = await _context.Reservations
+                .AnyAsync(r =>
+                    r.FacilityId == reservation.FacilityId &&
+                    r.StartTime < reservation.EndTime &&
+                    reservation.StartTime < r.EndTime);
+
+            if (hasConflict)
+            {
+                ModelState.AddModelError(string.Empty, "Istnieje już rezerwacja dla tego obiektu w podanym przedziale czasu.");
+            }
+
             if (ModelState.IsValid)
             {
                 _context.Add(reservation);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Id", reservation.UserId);
+
+            ViewData["FacilityId"] = new SelectList(_context.Facilities, "Id", "Name", reservation.FacilityId);
             return View(reservation);
         }
 
@@ -73,16 +104,19 @@ namespace ReservationSystem.Controllers
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
-            {
                 return NotFound();
-            }
 
             var reservation = await _context.Reservations.FindAsync(id);
             if (reservation == null)
-            {
                 return NotFound();
-            }
-            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Id", reservation.UserId);
+
+            var role = HttpContext.Session.GetString("UserRole");
+
+            if (role == "Admin")
+                ViewData["UserId"] = new SelectList(_context.Users, "Id", "Email", reservation.UserId);
+
+            ViewData["FacilityId"] = new SelectList(_context.Facilities, "Id", "Name", reservation.FacilityId);
+
             return View(reservation);
         }
 
@@ -91,34 +125,44 @@ namespace ReservationSystem.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,UserId,ObjectId,StartTime,EndTime,Notes")] Reservation reservation)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,UserId,FacilityId,StartTime,EndTime,Notes")] Reservation reservation)
         {
             if (id != reservation.Id)
-            {
                 return NotFound();
+
+            if (reservation.StartTime >= reservation.EndTime)
+            {
+                ModelState.AddModelError(string.Empty, "Czas rozpoczęcia musi być wcześniejszy niż czas zakończenia.");
+            }
+
+            // Sprawdzenie konfliktu rezerwacji przy edycji
+            bool hasConflict = await _context.Reservations
+                .AnyAsync(r =>
+                    r.Id != reservation.Id &&                  // pomijamy tę samą rezerwację
+                    r.FacilityId == reservation.FacilityId &&
+                    r.StartTime < reservation.EndTime &&
+                    reservation.StartTime < r.EndTime);
+
+            if (hasConflict)
+            {
+                ModelState.AddModelError(string.Empty, "Istnieje już rezerwacja dla tego obiektu w podanym przedziale czasu.");
             }
 
             if (ModelState.IsValid)
             {
-                try
-                {
-                    _context.Update(reservation);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!ReservationExists(reservation.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
+                _context.Update(reservation);
+                await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Id", reservation.UserId);
+
+            // jeśli są błędy, trzeba na nowo załadować dropdowny
+            var role = HttpContext.Session.GetString("UserRole");
+
+            if (role == "Admin")
+                ViewData["UserId"] = new SelectList(_context.Users, "Id", "Email", reservation.UserId);
+
+            ViewData["FacilityId"] = new SelectList(_context.Facilities, "Id", "Name", reservation.FacilityId);
+
             return View(reservation);
         }
 

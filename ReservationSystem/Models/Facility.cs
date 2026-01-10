@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace ReservationSystem.Models;
 
 public class Facility
@@ -9,4 +11,6 @@ public class Facility
     public int Size {get; set;}
     public string Occupancy {get; set;}
     public string ImageUrl { get; set; } // Ścieżka do obrazu reprezentującego obiekt
+    [NotMapped]
+    public IFormFile? ImageFile { get; set; }
 }

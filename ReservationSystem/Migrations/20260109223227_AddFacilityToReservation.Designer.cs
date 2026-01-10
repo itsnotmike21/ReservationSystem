@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ReservationSystem.Data;
 
@@ -10,9 +11,11 @@ using ReservationSystem.Data;
 namespace ReservationSystem.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260109223227_AddFacilityToReservation")]
+    partial class AddFacilityToReservation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.22");
@@ -97,6 +100,9 @@ namespace ReservationSystem.Migrations
                     b.Property<string>("Notes")
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("ObjectId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<DateTime>("StartTime")
                         .HasColumnType("TEXT");
 
@@ -139,7 +145,7 @@ namespace ReservationSystem.Migrations
                         {
                             Id = 1,
                             Email = "admin@admin.com",
-                            PasswordHash = "AQAAAAIAAYagAAAAENBmy05AIJVp/O9ybCqxl05GSWdaNmHXg/YRTyM9UbBzlMlwJLrBeAXRn/3sMUxmbw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEAYvuUpzleUKvJ8knPt190mBEsM7AAg5PPPc3RMXF93qYVcIObrMrB61kxIXs8qsrw==",
                             Role = "Admin"
                         });
                 });

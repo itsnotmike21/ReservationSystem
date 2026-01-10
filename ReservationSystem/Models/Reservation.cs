@@ -6,9 +6,9 @@ public class Reservation
 
     public int UserId { get; set; }
     public User User { get; set; }
-
-    public int ObjectId { get; set; }
-
+    
+    public int FacilityId { get; set; }
+    public Facility Facility { get; set; }
     public DateTime StartTime { get; set; }
     public DateTime EndTime { get; set; }
 

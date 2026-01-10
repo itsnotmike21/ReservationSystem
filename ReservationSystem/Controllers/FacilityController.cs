@@ -1,149 +1,157 @@
 using System;
-using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using ReservationSystem.Data;
 using ReservationSystem.Models;
 
 namespace ReservationSystem.Controllers
 {
-    public class FacilityController : Controller
+    public class FacilitiesController : Controller
     {
         private readonly ApplicationDbContext _context;
 
-        public FacilityController(ApplicationDbContext context)
+        public FacilitiesController(ApplicationDbContext context)
         {
             _context = context;
         }
 
-        // GET: Facility
+        // GET: Facilities
         public async Task<IActionResult> Index()
         {
             return View(await _context.Facilities.ToListAsync());
         }
 
-        // GET: Facility/Details/5
+        // GET: Facilities/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
-            {
                 return NotFound();
-            }
 
-            var facility = await _context.Facilities
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var facility = await _context.Facilities.FirstOrDefaultAsync(m => m.Id == id);
             if (facility == null)
-            {
                 return NotFound();
-            }
 
             return View(facility);
         }
 
-        // GET: Facility/Create
+        // GET: Facilities/Create
         public IActionResult Create()
         {
             return View();
         }
 
-        // POST: Facility/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        // POST: Facilities/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Name,Description,Price,Size,Occupancy,ImageUrl")] Facility facility)
+        public async Task<IActionResult> Create(Facility facility)
         {
+            if (facility.ImageFile != null)
+            {
+                string uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images");
+
+                if (!Directory.Exists(uploadDir))
+                    Directory.CreateDirectory(uploadDir);
+
+                string fileName = Guid.NewGuid().ToString() + Path.GetExtension(facility.ImageFile.FileName);
+                string filePath = Path.Combine(uploadDir, fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await facility.ImageFile.CopyToAsync(stream);
+                }
+
+                facility.ImageUrl = "/images/" + fileName;
+            }
+
             if (ModelState.IsValid)
             {
                 _context.Add(facility);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
+
             return View(facility);
         }
 
-        // GET: Facility/Edit/5
+        // GET: Facilities/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
-            {
                 return NotFound();
-            }
 
             var facility = await _context.Facilities.FindAsync(id);
             if (facility == null)
-            {
                 return NotFound();
-            }
+
             return View(facility);
         }
 
-        // POST: Facility/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        // POST: Facilities/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Description,Price,Size,Occupancy,ImageUrl")] Facility facility)
+        public async Task<IActionResult> Edit(int id, Facility facility)
         {
             if (id != facility.Id)
-            {
                 return NotFound();
+
+            var existing = await _context.Facilities.FindAsync(id);
+            if (existing == null)
+                return NotFound();
+
+            // aktualizacja pól tekstowych
+            existing.Name = facility.Name;
+            existing.Description = facility.Description;
+            existing.Price = facility.Price;
+            existing.Size = facility.Size;
+            existing.Occupancy = facility.Occupancy;
+
+            // upload nowego zdjęcia
+            if (facility.ImageFile != null)
+            {
+                string uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images");
+
+                if (!Directory.Exists(uploadDir))
+                    Directory.CreateDirectory(uploadDir);
+
+                string fileName = Guid.NewGuid().ToString() + Path.GetExtension(facility.ImageFile.FileName);
+                string filePath = Path.Combine(uploadDir, fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await facility.ImageFile.CopyToAsync(stream);
+                }
+
+                existing.ImageUrl = "/images/" + fileName;
             }
 
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    _context.Update(facility);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!FacilityExists(facility.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
-            }
-            return View(facility);
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
         }
 
-        // GET: Facility/Delete/5
+        // GET: Facilities/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
-            {
                 return NotFound();
-            }
 
-            var facility = await _context.Facilities
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var facility = await _context.Facilities.FirstOrDefaultAsync(m => m.Id == id);
             if (facility == null)
-            {
                 return NotFound();
-            }
 
             return View(facility);
         }
 
-        // POST: Facility/Delete/5
+        // POST: Facilities/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var facility = await _context.Facilities.FindAsync(id);
             if (facility != null)
-            {
                 _context.Facilities.Remove(facility);
-            }
 
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
