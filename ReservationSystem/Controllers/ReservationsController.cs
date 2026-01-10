@@ -27,7 +27,7 @@ namespace ReservationSystem.Controllers
 
             IQueryable<Reservation> reservations = _context.Reservations
                 .Include(r => r.Facility)
-                .Include(r => r.User); // admin zobaczy dane usera
+                .Include(r => r.User);
 
             if (role != "Admin")
             {
@@ -41,31 +41,32 @@ namespace ReservationSystem.Controllers
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
-            {
                 return NotFound();
-            }
 
             var reservation = await _context.Reservations
                 .Include(r => r.User)
+                .Include(r => r.Facility)
                 .FirstOrDefaultAsync(m => m.Id == id);
+
             if (reservation == null)
-            {
                 return NotFound();
-            }
 
             return View(reservation);
         }
 
         // GET: Reservations/Create
-        public IActionResult Create()
+        public IActionResult Create(int? facilityId, DateTime? startDate)
         {
-            ViewData["FacilityId"] = new SelectList(_context.Facilities, "Id", "Name");
+            if (startDate.HasValue)
+            {
+                ViewBag.StartDate = startDate.Value.ToString("yyyy-MM-ddTHH:mm");
+            }
+
+            ViewData["FacilityId"] = new SelectList(_context.Facilities, "Id", "Name", facilityId);
             return View();
         }
 
         // POST: Reservations/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,FacilityId,StartTime,EndTime,Notes")] Reservation reservation)
@@ -77,7 +78,6 @@ namespace ReservationSystem.Controllers
                 ModelState.AddModelError(string.Empty, "Czas rozpoczęcia musi być wcześniejszy niż czas zakończenia.");
             }
 
-            // Sprawdzenie konfliktu rezerwacji dla tego samego obiektu
             bool hasConflict = await _context.Reservations
                 .AnyAsync(r =>
                     r.FacilityId == reservation.FacilityId &&
@@ -121,8 +121,6 @@ namespace ReservationSystem.Controllers
         }
 
         // POST: Reservations/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,UserId,FacilityId,StartTime,EndTime,Notes")] Reservation reservation)
@@ -135,10 +133,9 @@ namespace ReservationSystem.Controllers
                 ModelState.AddModelError(string.Empty, "Czas rozpoczęcia musi być wcześniejszy niż czas zakończenia.");
             }
 
-            // Sprawdzenie konfliktu rezerwacji przy edycji
             bool hasConflict = await _context.Reservations
                 .AnyAsync(r =>
-                    r.Id != reservation.Id &&                  // pomijamy tę samą rezerwację
+                    r.Id != reservation.Id &&
                     r.FacilityId == reservation.FacilityId &&
                     r.StartTime < reservation.EndTime &&
                     reservation.StartTime < r.EndTime);
@@ -155,7 +152,6 @@ namespace ReservationSystem.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            // jeśli są błędy, trzeba na nowo załadować dropdowny
             var role = HttpContext.Session.GetString("UserRole");
 
             if (role == "Admin")
@@ -170,17 +166,15 @@ namespace ReservationSystem.Controllers
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
-            {
                 return NotFound();
-            }
 
             var reservation = await _context.Reservations
                 .Include(r => r.User)
+                .Include(r => r.Facility)
                 .FirstOrDefaultAsync(m => m.Id == id);
+
             if (reservation == null)
-            {
                 return NotFound();
-            }
 
             return View(reservation);
         }
@@ -198,6 +192,62 @@ namespace ReservationSystem.Controllers
 
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
+        }
+
+        // TIMELINE — lista rezerwacji pogrupowana po dniach
+        public async Task<IActionResult> Timeline()
+        {
+            var role = HttpContext.Session.GetString("UserRole");
+            var userId = HttpContext.Session.GetInt32("UserId");
+
+            IQueryable<Reservation> reservations = _context.Reservations
+                .Include(r => r.Facility)
+                .Include(r => r.User)
+                .OrderByDescending(r => r.StartTime);
+
+            if (role != "Admin")
+            {
+                reservations = reservations.Where(r => r.UserId == userId);
+            }
+
+            var grouped = await reservations
+                .GroupBy(r => r.StartTime.Date)
+                .ToListAsync();
+
+            return View(grouped);
+        }
+
+        // KALENDARZ MIESIĘCZNY
+        public async Task<IActionResult> MonthlyCalendar(int? year, int? month)
+        {
+            var now = DateTime.Now;
+
+            int y = year ?? now.Year;
+            int m = month ?? now.Month;
+
+            var firstDay = new DateTime(y, m, 1);
+            var lastDay = firstDay.AddMonths(1).AddDays(-1);
+
+            var role = HttpContext.Session.GetString("UserRole");
+            var userId = HttpContext.Session.GetInt32("UserId");
+
+            IQueryable<Reservation> reservations = _context.Reservations
+                .Where(r => r.StartTime.Date >= firstDay && r.StartTime.Date <= lastDay);
+
+            if (role != "Admin")
+                reservations = reservations.Where(r => r.UserId == userId);
+
+            var grouped = await reservations
+                .GroupBy(r => r.StartTime.Date)
+                .ToDictionaryAsync(g => g.Key, g => g.ToList());
+
+            ViewBag.Year = y;
+            ViewBag.Month = m;
+            ViewBag.FirstDay = firstDay;
+            ViewBag.LastDay = lastDay;
+            ViewBag.Reservations = grouped;
+
+            return View();
         }
 
         private bool ReservationExists(int id)

@@ -1,0 +1,77 @@
+@using ReservationSystem.Models
+@using System
+@using System.Collections.Generic
+
+@{
+    ViewData["Title"] = "Kalendarz miesięczny";
+
+    int year = (int)ViewBag.Year;
+    int month = (int)ViewBag.Month;
+    DateTime firstDay = (DateTime)ViewBag.FirstDay;
+    DateTime lastDay = (DateTime)ViewBag.LastDay;
+    var reservations = ViewBag.Reservations as Dictionary<DateTime, List<Reservation>> ?? new Dictionary<DateTime, List<Reservation>>();
+
+    int startOffset = (int)firstDay.DayOfWeek;
+    if (startOffset == 0) startOffset = 7; // niedziela na koniec
+}
+
+<h1 class="mb-4">Kalendarz — @firstDay.ToString("MMMM yyyy")</h1>
+
+<div class="d-flex justify-content-between mb-3">
+    <a class="btn btn-secondary"
+       asp-action="MonthlyCalendar"
+       asp-route-year="@(month == 1 ? year - 1 : year)"
+       asp-route-month="@(month == 1 ? 12 : month - 1)">
+        Poprzedni
+    </a>
+
+    <a class="btn btn-secondary"
+       asp-action="MonthlyCalendar"
+       asp-route-year="@(month == 12 ? year + 1 : year)"
+       asp-route-month="@(month == 12 ? 1 : month + 1)">
+        Następny
+    </a>
+</div>
+
+<table class="table table-bordered text-center">
+    <thead class="table-light">
+    <tr>
+        <th>Pon</th>
+        <th>Wt</th>
+        <th>Śr</th>
+        <th>Czw</th>
+        <th>Pt</th>
+        <th>Sob</th>
+        <th>Nd</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        @for (int i = 1; i < startOffset; i++)
+        {
+            <td></td>
+        }
+
+        @for (int day = 1; day <= lastDay.Day; day++)
+        {
+            var date = new DateTime(year, month, day);
+            bool hasRes = reservations.ContainsKey(date.Date);
+
+            <td class="@(hasRes ? "table-warning" : "")">
+                <a asp-controller="Reservations"
+                   asp-action="Timeline"
+                   asp-route-startDate="@date.ToString("yyyy-MM-dd")"
+                   class="text-dark fw-bold">
+                    @day
+                </a>
+            </td>
+
+            if ((day + startOffset - 1) % 7 == 0 && day != lastDay.Day)
+            {
+                @:</tr>
+            @:<tr>
+            }
+        }
+    </tr>
+    </tbody>
+</table>
