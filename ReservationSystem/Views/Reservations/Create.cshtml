@@ -3,43 +3,81 @@
 
 @{
     ViewData["Title"] = "Create";
+    var role = Context.Session.GetString("UserRole");
 }
 
-<h1>Create</h1>
+<h1>Tworzenie rezerwacji</h1>
 
-<h4>Reservation</h4>
 <hr />
 <div class="row">
     <div class="col-md-4">
+
         <form asp-action="Create">
+
             <div asp-validation-summary="All" class="text-danger"></div>
+
+            <!-- ZMIANA: FacilityId musi być wysyłane -->
+            <input type="hidden" asp-for="FacilityId" />
+
+            <!--Wyświetlanie nazwy i ceny obiektu -->
+            @if (ViewBag.Facility != null)
+            {
+                <div class="alert alert-info">
+                    <strong>Obiekt:</strong> @ViewBag.Facility.Name <br />
+                    <strong>Cena za godzinę:</strong> @ViewBag.Facility.Price zł
+                </div>
+            }
+
+            <!-- UserId -->
+            @if (role == "Admin")
+            {
+                <div class="form-group">
+                    <label asp-for="UserId" class="control-label">Klient</label>
+                    <select asp-for="UserId" class="form-control" asp-items="ViewBag.UserId"></select>
+                </div>
+            }
+            else
+            {
+                <!-- ZMIANA: user nie widzi pola, ale hidden musi istnieć -->
+                <input type="hidden" asp-for="UserId" />
+            }
+
+            <!-- StartTime -->
             <div class="form-group">
-                <label asp-for="UserId" class="control-label"></label>
-                <select asp-for="UserId" class ="form-control" asp-items="ViewBag.UserId"></select>
-            </div>
-            <div class="form-group">
-                <label asp-for="StartTime" class="control-label"></label>
-                <input asp-for="StartTime" class="form-control" />
+                <label asp-for="StartTime">Od</label>
+                <input asp-for="StartTime"
+                       type="datetime-local"
+                       class="form-control"
+                       value="@Model.StartTime.ToString("yyyy-MM-ddTHH:mm")" />
                 <span asp-validation-for="StartTime" class="text-danger"></span>
             </div>
+
+            <!-- EndTime -->
             <div class="form-group">
-                <label asp-for="EndTime" class="control-label"></label>
-                <input asp-for="EndTime" class="form-control" />
+                <label asp-for="EndTime">Do</label>
+                <input asp-for="EndTime"
+                       type="datetime-local"
+                       class="form-control"
+                       value="@Model.EndTime.ToString("yyyy-MM-ddTHH:mm")" />
                 <span asp-validation-for="EndTime" class="text-danger"></span>
             </div>
+
+            <!-- Notes -->
             <div class="form-group">
-                <label asp-for="Notes" class="control-label"></label>
+                <label asp-for="Notes">Uwagi</label>
                 <input asp-for="Notes" class="form-control" />
                 <span asp-validation-for="Notes" class="text-danger"></span>
             </div>
-            <div class="form-group">
+
+            <div class="form-group mt-3">
                 <input type="submit" value="Create" class="btn btn-primary" />
             </div>
+
         </form>
+
     </div>
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
+<div class="mt-3">
+    <a asp-action="Index">Powrót do listy</a>
 </div>
-

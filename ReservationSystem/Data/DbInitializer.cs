@@ -25,21 +25,33 @@ namespace ReservationSystem.Data
                 context.Facilities.AddRange(
                     new Facility
                     {
-                        Name = "Conference Room A",
+                        Id = 1, 
+                        Name = "Conference Room A", 
                         Description = "First Floor",
                         Price = 100.0,
                         Size = 50,
                         Occupancy = "50 people",
                         ImageUrl = "/images/conference_room_a.jpg"
                     },
-                    new Facility
-                    {
-                        Name = "Gymnasium",
+                    new Facility 
+                    { 
+                        Id = 2, 
+                        Name = "Gymnasium", 
                         Description = "Second Floor",
                         Price = 150.0,
                         Size = 200,
                         Occupancy = "200 people",
                         ImageUrl = "/images/gymnasium.jpg"
+                    },
+                    new Facility
+                    {
+                        Id = 3, 
+                        Name = "Auditorium", 
+                        Description = "Ground Floor",
+                        Price = 250.0,
+                        Size = 300,
+                        Occupancy = "300 people",
+                        ImageUrl = "/images/auditorium.jpg"
                     }
                 );
             }

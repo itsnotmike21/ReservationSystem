@@ -35,6 +35,8 @@ namespace ReservationSystem.Controllers
             }
 
             return View(await reservations.ToListAsync());
+            
+            
         }
 
         // GET: Reservations/Details/5
@@ -53,17 +55,33 @@ namespace ReservationSystem.Controllers
 
             return View(reservation);
         }
-
+        
         // GET: Reservations/Create
         public IActionResult Create(int? facilityId, DateTime? startDate)
         {
-            if (startDate.HasValue)
+            var role = HttpContext.Session.GetString("UserRole");
+
+            //// ZMIANA: Admin dostaje listę użytkowników
+            if (role == "Admin")
             {
-                ViewBag.StartDate = startDate.Value.ToString("yyyy-MM-ddTHH:mm");
+                ViewBag.UserId = new SelectList(_context.Users, "Id", "Email");
             }
 
-            ViewData["FacilityId"] = new SelectList(_context.Facilities, "Id", "Name", facilityId);
-            return View();
+            //// ZMIANA: Dodano listę obiektów dla usera i admina
+            ViewBag.FacilityId = new SelectList(_context.Facilities, "Id", "Name", facilityId);
+
+            //// ZMIANA: Pobieramy obiekt, aby wyświetlić nazwę i cenę
+            ViewBag.Facility = _context.Facilities.FirstOrDefault(f => f.Id == facilityId);
+
+            //// ZMIANA: Ustawiamy poprawne domyślne daty
+            var start = startDate ?? DateTime.Now;
+
+            return View(new Reservation
+            {
+                FacilityId = facilityId ?? 0,
+                StartTime = start,
+                EndTime = start.AddHours(1)   //// ZMIANA: EndTime nie jest 01/01/0001
+            });
         }
 
         // POST: Reservations/Create
@@ -71,13 +89,21 @@ namespace ReservationSystem.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,FacilityId,StartTime,EndTime,Notes")] Reservation reservation)
         {
-            reservation.UserId = HttpContext.Session.GetInt32("UserId").Value;
+            var role = HttpContext.Session.GetString("UserRole");
 
+            //// ZMIANA: UserId ustawiane automatycznie dla zwykłego usera
+            if (role != "Admin")
+            {
+                reservation.UserId = HttpContext.Session.GetInt32("UserId").Value;
+            }
+
+            //// Walidacja czasu
             if (reservation.StartTime >= reservation.EndTime)
             {
                 ModelState.AddModelError(string.Empty, "Czas rozpoczęcia musi być wcześniejszy niż czas zakończenia.");
             }
 
+            //// Sprawdzenie konfliktu rezerwacji
             bool hasConflict = await _context.Reservations
                 .AnyAsync(r =>
                     r.FacilityId == reservation.FacilityId &&
@@ -96,10 +122,20 @@ namespace ReservationSystem.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            ViewData["FacilityId"] = new SelectList(_context.Facilities, "Id", "Name", reservation.FacilityId);
+            //// ZMIANA: ponowne załadowanie dropdownów po błędzie
+            if (role == "Admin")
+            {
+                ViewBag.UserId = new SelectList(_context.Users, "Id", "Email", reservation.UserId);
+            }
+
+            ViewBag.FacilityId = new SelectList(_context.Facilities, "Id", "Name", reservation.FacilityId);
+
+            //// ZMIANA: ponowne przekazanie obiektu do widoku
+            ViewBag.Facility = _context.Facilities.FirstOrDefault(f => f.Id == reservation.FacilityId);
+
             return View(reservation);
         }
-
+        
         // GET: Reservations/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
@@ -254,5 +290,7 @@ namespace ReservationSystem.Controllers
         {
             return _context.Reservations.Any(e => e.Id == id);
         }
+        
+        
     }
 }

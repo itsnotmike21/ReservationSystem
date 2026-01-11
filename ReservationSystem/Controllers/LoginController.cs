@@ -42,7 +42,7 @@ namespace ReservationSystem.Controllers
             HttpContext.Session.SetString("UserRole", user.Role);
             HttpContext.Session.SetString("UserEmail", user.Email);
 
-            return RedirectToAction("Index", "Home");
+            return RedirectToAction("Index", "Facilities");
         }
 
         public IActionResult Logout()

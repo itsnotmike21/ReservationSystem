@@ -1,0 +1,54 @@
+@model ReservationSystem.Models.Facility
+
+@{
+    ViewData["Title"] = "Edytuj obiekt";
+}
+
+<h2>Edytuj obiekt</h2>
+
+<form asp-action="Edit" enctype="multipart/form-data">
+    <input type="hidden" asp-for="Id" />
+
+    <div class="mb-3">
+        <label asp-for="Name" class="form-label">Nazwa</label>
+        <input asp-for="Name" class="form-control" />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Description" class="form-label">Opis</label>
+        <textarea asp-for="Description" class="form-control"></textarea>
+        <span asp-validation-for="Description" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Price" class="form-label">Cena</label>
+        <input asp-for="Price" class="form-control" />
+        <span asp-validation-for="Price" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Size" class="form-label">Metraż</label>
+        <input asp-for="Size" class="form-control" />
+        <span asp-validation-for="Size" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Occupancy" class="form-label">Maksymalna liczba osób</label>
+        <input asp-for="Occupancy" class="form-control" />
+        <span asp-validation-for="Occupancy" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label>Aktualne zdjęcie:</label><br />
+        <img src="@Model.ImageUrl" style="max-width:200px;" />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="ImageFile" class="form-label">Nowe zdjęcie (opcjonalnie)</label>
+        <input asp-for="ImageFile" type="file" class="form-control" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Zapisz</button>
+    <a asp-action="Index" class="btn btn-secondary">Powrót</a>
+</form>
