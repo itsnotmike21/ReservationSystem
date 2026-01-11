@@ -10,6 +10,7 @@ public class Reservation
     public int UserId { get; set; }
 
     [ValidateNever]   // ← ASP.NET nie waliduje User
+    [Display(Name = "ID użytkownika")]
     public User User { get; set; }
     
     public int FacilityId { get; set; }
