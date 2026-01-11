@@ -1,8 +1,68 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "System Rezerwacji";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<!-- HERO SECTION -->
+<section class="hero d-flex align-items-center justify-content-center text-center">
+    <div>
+        <h1 class="neon mb-3">Nowoczesny system rezerwacji</h1>
+        <p class="lead" style="max-width: 700px; margin: 0 auto 10px auto;">
+            Rezerwuj zasoby, usługi lub przestrzenie w jednym, przejrzystym panelu.
+            Elastyczny system, który dopasowuje się do Twojej działalności.
+        </p>
+        <a href="/Login" class="btn-accent mt-4">Przejdź do logowania</a>
+    </div>
+</section>
+
+<!-- OPIS DZIAŁALNOŚCI -->
+<div class="container mt-5">
+    <div class="card mb-4">
+        <h2 class="mb-3 neon">Czym jest nasz system?</h2>
+        <p>
+            To uniwersalna platforma do zarządzania rezerwacjami — niezależnie od tego,
+            czy prowadzisz firmę usługową, wynajmujesz przestrzeń, udostępniasz sprzęt,
+            czy organizujesz spotkania.
+        </p>
+        <p>
+            System pozwala w prosty sposób:
+        </p>
+
+        <ul>
+            <li>tworzyć i zarządzać zasobami do rezerwacji,</li>
+            <li>kontrolować dostępność i harmonogram,</li>
+            <li>obsługiwać konta użytkowników,</li>
+            <li>monitorować obłożenie i historię rezerwacji.</li>
+        </ul>
+    </div>
+
+    <!-- SEKCJA 3 KAFELKÓW -->
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card h-100">
+                <h4 class="neon">Uniwersalność</h4>
+                <p>System sprawdzi się w każdej branży — od biur po usługi specjalistyczne.</p>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card h-100">
+                <h4 class="neon">Przejrzystość</h4>
+                <p>Intuicyjny interfejs pozwala szybko odnaleźć potrzebne funkcje.</p>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card h-100">
+                <h4 class="neon">Pełna kontrola</h4>
+                <p>Zarządzaj zasobami, użytkownikami i rezerwacjami z jednego miejsca.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="text-center mt-5 mb-5">
+        <a href="/Register" class="btn-accent" style="font-size: 1.2rem; padding: 12px 28px;">
+            Załóż konto i zacznij korzystać
+        </a>
+    </div>
 </div>

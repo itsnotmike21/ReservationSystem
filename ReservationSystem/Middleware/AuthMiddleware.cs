@@ -13,8 +13,18 @@ public class AuthMiddleware
     {
         var path = context.Request.Path.Value.ToLower();
 
-        // Strony dostępne bez logowania
-        var allowed = new[] { "/login", "/register", "/css", "/js" };
+        var allowed = new[]
+        {
+            "/",
+            "/home",
+            "/home/index",
+            "/login",
+            "/register",
+            "/css",
+            "/js",
+            "/images",
+            "/lib"
+        };
 
         if (!allowed.Any(a => path.StartsWith(a)))
         {
