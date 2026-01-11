@@ -1,22 +1,89 @@
-html {
-  font-size: 14px;
+:root {
+  --bg: #ffffff;
+  --text: #000000;
+  --accent: #ff00ff;
+  --card-dark: #1a1a1a;
+  --text-dark: #cccccc;
 }
 
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
+:root[data-theme="dark"] {
+  --bg: #000000;
+  --text: #ffffff;
 }
 
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+.hero {
+  min-height: 70vh;
+  background: var(--bg);
+  color: var(--text);
 }
 
-html {
-  position: relative;
-  min-height: 100%;
+.neon {
+  color: var(--accent);
+  text-shadow: none;
 }
 
-body {
-  margin-bottom: 60px;
+.btn-accent {
+  background: var(--accent);
+  color: #000;
+  padding: 10px 22px;
+  border-radius: 8px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: opacity .2s;
+}
+
+.btn-accent:hover {
+  opacity: .8;
+  color: #000;
+}
+
+[data-theme="dark"] .hero h1,
+[data-theme="dark"] .hero p,
+[data-theme="dark"] .hero .lead {
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .card {
+  background: var(--card-dark) !important;
+  border: 1px solid rgba(255,255,255,0.12) !important;
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .card h2,
+[data-theme="dark"] .card h4,
+[data-theme="dark"] .card p,
+[data-theme="dark"] .card li {
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] ul li {
+  color: #ffffff !important;
+}
+
+[data-theme="light"] .neon {
+  color: var(--accent);
+  text-shadow: none !important;
+}
+
+[data-theme="dark"] .neon {
+  color: var(--accent);
+  text-shadow: 0 0 6px var(--accent), 0 0 12px var(--accent) !important;
+}
+
+[data-theme="dark"] .btn-accent {
+  background: var(--accent) !important;
+  color: #000000 !important;
+}
+
+[data-theme="dark"] .nav-link {
+  color: var(--text-dark) !important;
+}
+
+[data-theme="dark"] footer {
+  color: var(--text-dark) !important;
+}
+
+html[data-theme="dark"] body .container .card,
+html[data-theme="dark"] body .container .card * {
+  color: #ffffff !important;
 }
