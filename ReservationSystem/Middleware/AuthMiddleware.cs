@@ -13,26 +13,40 @@ public class AuthMiddleware
     {
         var path = context.Request.Path.Value.ToLower();
 
+        // Ścieżki publiczne
         var allowed = new[]
         {
             "/",
             "/home",
             "/home/index",
             "/login",
+            "/login/index",
             "/register",
-            "/css",
-            "/js",
-            "/images",
-            "/lib"
+            "/register/index"
         };
 
-        if (!allowed.Any(a => path.StartsWith(a)))
+        // Pliki statyczne
+        if (path.StartsWith("/css") ||
+            path.StartsWith("/js") ||
+            path.StartsWith("/images") ||
+            path.StartsWith("/lib"))
         {
-            if (context.Session.GetInt32("UserId") == null)
-            {
-                context.Response.Redirect("/Login");
-                return;
-            }
+            await _next(context);
+            return;
+        }
+
+        // Strony publiczne
+        if (allowed.Any(a => path.StartsWith(a)))
+        {
+            await _next(context);
+            return;
+        }
+
+        // Wymagana sesja
+        if (context.Session.GetInt32("UserId") == null)
+        {
+            context.Response.Redirect("/Login");
+            return;
         }
 
         await _next(context);

@@ -31,12 +31,9 @@ namespace ReservationSystem.Controllers
             }
 
             // Weryfikacja hasła hashowanego
-            var hasher = new PasswordHasher<User>();
-            var result = hasher.VerifyHashedPassword(user, user.PasswordHash, password);
-
-            if (result == PasswordVerificationResult.Failed)
+            if (!BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
             {
-                ViewBag.Error = "Invalid email or password.";
+                ViewBag.Error = "Nieprawidłowe dane logowania.";
                 return View();
             }
 

@@ -2,10 +2,10 @@ using ReservationSystem.Data;
 using Microsoft.EntityFrameworkCore;
 using ReservationSystem.Middleware;
 
-
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
+builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -19,6 +19,14 @@ builder.Services.AddSession(options =>
 
 var app = builder.Build();
 
+// MIGRACJE + SEEDING (poprawne miejsce)
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    db.Database.Migrate();
+    DbInitializer.Seed(db);
+}
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -30,7 +38,7 @@ app.UseStaticFiles();
 
 app.UseRouting();
 app.UseSession();
-/*app.UseMiddleware<AuthMiddleware>();*/
+app.UseMiddleware<AuthMiddleware>();
 
 app.UseAuthorization();
 
