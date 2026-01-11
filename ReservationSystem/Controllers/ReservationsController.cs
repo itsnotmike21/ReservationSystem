@@ -159,16 +159,30 @@ namespace ReservationSystem.Controllers
         // POST: Reservations/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,UserId,FacilityId,StartTime,EndTime,Notes")] Reservation reservation)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,StartTime,EndTime,Notes")] Reservation edited)
         {
-            if (id != reservation.Id)
+            if (id != edited.Id)
                 return NotFound();
 
+            // 1. Wczytujemy istniejącą rezerwację z bazy
+            var reservation = await _context.Reservations
+                .FirstOrDefaultAsync(r => r.Id == id);
+
+            if (reservation == null)
+                return NotFound();
+
+            // 2. Aktualizujemy TYLKO dozwolone pola
+            reservation.StartTime = edited.StartTime;
+            reservation.EndTime = edited.EndTime;
+            reservation.Notes = edited.Notes;
+
+            // 3. Walidacja czasu
             if (reservation.StartTime >= reservation.EndTime)
             {
                 ModelState.AddModelError(string.Empty, "Czas rozpoczęcia musi być wcześniejszy niż czas zakończenia.");
             }
 
+            // 4. Sprawdzenie konfliktu rezerwacji
             bool hasConflict = await _context.Reservations
                 .AnyAsync(r =>
                     r.Id != reservation.Id &&
@@ -181,21 +195,20 @@ namespace ReservationSystem.Controllers
                 ModelState.AddModelError(string.Empty, "Istnieje już rezerwacja dla tego obiektu w podanym przedziale czasu.");
             }
 
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                _context.Update(reservation);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                // jeśli wracasz do widoku, a on korzysta z dropdownów:
+                var role = HttpContext.Session.GetString("UserRole");
+                if (role == "Admin")
+                    ViewData["UserId"] = new SelectList(_context.Users, "Id", "Email", reservation.UserId);
+                ViewData["FacilityId"] = new SelectList(_context.Facilities, "Id", "Name", reservation.FacilityId);
+
+                return View(reservation);
             }
 
-            var role = HttpContext.Session.GetString("UserRole");
-
-            if (role == "Admin")
-                ViewData["UserId"] = new SelectList(_context.Users, "Id", "Email", reservation.UserId);
-
-            ViewData["FacilityId"] = new SelectList(_context.Facilities, "Id", "Name", reservation.FacilityId);
-
-            return View(reservation);
+            // 5. Zapisujemy – FK nie zostały dotknięte, więc nie wybucha
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
         }
 
         // GET: Reservations/Delete/5
